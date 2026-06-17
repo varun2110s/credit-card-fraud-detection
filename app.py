@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify , render_template
 import joblib
 import numpy as np
 
@@ -11,7 +11,7 @@ model = joblib.load('fraud_detection_model.pkl')
 # Home route - check if API is running
 @app.route('/')
 def home():
-    return "Fraud Detection API is running!"
+   return render_template('index.html')
 
 # Predict route - takes transaction data and returns fraud prediction
 @app.route('/predict', methods=['POST'])
@@ -24,4 +24,4 @@ def predict():
 
 # Run the app
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=10000)
