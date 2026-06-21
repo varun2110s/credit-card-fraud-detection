@@ -18,21 +18,22 @@ if st.button('Check Transaction'):
     try:
         features = np.array(features_input.split(','), dtype=float).reshape(1, -1)
         prediction = model.predict(features)
-        
+
         if prediction[0] == 1:
             st.error('🚨 FRAUD Transaction Detected!')
         else:
             st.success('✅ Normal Transaction')
-        
+
         # SHAP explanation
         st.write('### Why this prediction?')
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(features)
         fig, ax = plt.subplots()
-        shap.waterfall_plot(shap.Explanation(values=shap_values[1][0], 
-                            base_values=explainer.expected_value[1], 
-                            data=features[0]))
+        shap.waterfall_plot(shap.Explanation(
+            values=shap_values[0][0],
+            base_values=explainer.expected_value[0],
+            data=features[0]))
         st.pyplot(fig)
-        
+
     except Exception as e:
         st.warning(f'Error: {e}')
