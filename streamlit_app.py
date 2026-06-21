@@ -29,7 +29,7 @@ if st.button('Check Transaction'):
             feature_names = [f'V{i}' for i in range(1, 29)] + ['Amount_scaled', 'Time_scaled']
             explainer = shap.TreeExplainer(model)
             shap_values = explainer.shap_values(features)
-            importance = pd.Series(shap_values[0][0], index=feature_names)
+            importance = pd.Series(shap_values[1][0], index=feature_names)
             top_features = importance.abs().nlargest(3)
 
             st.write('The following unusual patterns were detected in this transaction:')
