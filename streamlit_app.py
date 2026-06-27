@@ -4,47 +4,45 @@ import numpy as np
 import shap
 import pandas as pd
 
-# Load the saved model
 model = joblib.load('fraud_detection_model.pkl')
 
 st.title('💳 Credit Card Fraud Detection')
-st.write('Select a transaction to check if it is fraud or normal.')
+st.write('Select a transaction to analyze.')
 
-# Predefined transactions
-fraud_values = [-2.312226542, 1.951992011, -1.609850732, 3.997905588, -0.522187865, -1.426545319, -2.537387306, 1.391657248, -2.770089277, -2.772272145, 3.202033207, -2.899907388, -0.595221881, -4.289253782, 0.38972412, -1.14074718, -2.830055675, -0.016822468, 0.416955705, 0.126910559, 0.517232371, -0.035049369, -0.465211076, 0.320198199, 0.044519167, 0.177839798, 0.261145003, -0.143275875, -0.35322939296682354, -1.9880335064229064]
+transactions = {
+    'Transaction #541': [-2.312226542, 1.951992011, -1.609850732, 3.997905588, -0.522187865, -1.426545319, -2.537387306, 1.391657248, -2.770089277, -2.772272145, 3.202033207, -2.899907388, -0.595221881, -4.289253782, 0.38972412, -1.14074718, -2.830055675, -0.016822468, 0.416955705, 0.126910559, 0.517232371, -0.035049369, -0.465211076, 0.320198199, 0.044519167, 0.177839798, 0.261145003, -0.143275875, -0.35322939296682354, -1.9880335064229064],
+    'Transaction #623': [-3.043540624, -3.157307121, 1.08846278, 2.288643618, 1.35980513, -1.064822523, 0.325574266, -0.067793653, -0.270952836, -0.838586565, -0.414575448, -0.50314086, 0.676501545, -1.692028933, 2.000634839, 0.666779696, 0.599717414, 1.725321007, 0.28334483, 2.102338793, 0.661695925, 0.435477209, 1.375965743, -0.293803153, 0.279798032, -0.145361715, -0.252773123, 0.035764225, 1.761758203626355, -1.9866436834567416],
+    'Transaction #4920': [-2.303349568, 1.75924746, -0.359744743, 2.330243051, -0.821628328, -0.075787571, 0.562319782, -0.399146578, -0.238253368, -1.525411627, 2.032912158, -6.560124295, 0.022937323, -1.470101536, -0.698826069, -2.282193829, -4.781830856, -2.615664945, -1.334441067, -0.430021867, -0.294166318, -0.932391057, 0.172726296, -0.087329538, -0.156114265, -0.542627889, 0.039565989, -0.153028797, 0.6060314275447102, -1.9026225677749584],
+    'Transaction #0': [-1.359807134, -0.072781173, 2.536346738, 1.378155224, -0.33832077, 0.462387778, 0.239598554, 0.098697901, 0.36378697, 0.090794172, -0.551599533, -0.617800856, -0.991389847, -0.311169354, 1.468176972, -0.470400525, 0.207971242, 0.02579058, 0.40399296, 0.251412098, -0.018306778, 0.277837576, -0.11047391, 0.066928075, 0.128539358, -0.189114844, 0.133558377, -0.021053053, 0.24496426337017338, -1.996583023457193],
+    'Transaction #1': [1.191857111, 0.266150712, 0.166480113, 0.448154078, 0.060017649, -0.082360809, -0.078802983, 0.085101655, -0.255425128, -0.166974414, 1.612726661, 1.065235311, 0.489095016, -0.143772296, 0.635558093, 0.463917041, -0.114804663, -0.18336127, -0.145783041, -0.069083135, -0.225775248, -0.638671953, 0.101288021, -0.339846476, 0.167170404, 0.125894532, -0.008983099, 0.014724169, -0.3424745411051305, -1.996583023457193],
+    'Transaction #2': [-1.358354062, -1.340163075, 1.773209343, 0.379779593, -0.503198133, 1.800499381, 0.791460956, 0.247675787, -1.514654323, 0.207642865, 0.624501459, 0.066083685, 0.717292731, -0.165945923, 2.345864949, -2.890083194, 1.109969379, -0.121359313, -2.261857095, 0.524979725, 0.247998153, 0.771679402, 0.909412262, -0.689280956, -0.327641834, -0.139096572, -0.055352794, -0.059751841, 1.1606859252297228, -1.9965619655334634],
+    'Transaction #3': [-0.966271712, -0.185226008, 1.79299334, -0.863291275, -0.01030888, 1.247203168, 0.23760894, 0.377435875, -1.387024063, -0.054951922, -0.226487264, 0.178228226, 0.50775687, -0.287923745, -0.631418118, -1.059647245, -0.684092786, 1.965775003, -1.23262197, -0.208037781, -0.108300452, 0.005273597, -0.190320519, -1.175575332, 0.647376035, -0.221928844, 0.062722849, 0.061457629, 0.14053425198451397, -1.9965619655334634],
+    'Transaction #4': [-1.158233093, 0.877736755, 1.548717847, 0.403033934, -0.407193377, 0.095921462, 0.592940745, -0.270532677, 0.817739308, 0.753074432, -0.822842878, 0.53819555, 1.345851593, -1.119669835, 0.17512113, -0.451449183, -0.237033239, -0.038194787, 0.803486925, 0.40854236, -0.009430697, 0.798278495, -0.13745808, 0.141266984, -0.206009588, 0.502292224, 0.21942223, 0.215153147, -0.07340334025310606, -1.9965409076097336],
+}
 
-normal_values = [1.191857, 0.266151, 0.166480, 0.448154, 0.060018, -0.082361, -0.078803, 0.085102, -0.255425, -0.166974, 1.612727, 1.065235, 0.489095, -0.143772, 0.635558, 0.463917, -0.114805, -0.183361, -0.145783, -0.069083, -0.225775, -0.638672, 0.101288, -0.339846, 0.167170, 0.125895, -0.008983, 0.014724, -0.342475, -1.996583]
+option = st.selectbox('Choose a transaction:', list(transactions.keys()))
 
-option = st.selectbox('Choose a transaction to test:', [
-    'Select...',
-    '🔴 Test Fraud Transaction',
-    '🟢 Test Normal Transaction'
-])
+if st.button('Analyze Transaction'):
+    features = np.array(transactions[option]).reshape(1, -1)
+    prediction = model.predict(features)
+    probability = model.predict_proba(features)[0]
 
-if st.button('Check Transaction'):
-    if option == 'Select...':
-        st.warning('Please select a transaction first!')
+    if prediction[0] == 1:
+        st.error('🚨 FRAUD Transaction Detected!')
+        st.write(f'**Confidence:** {round(probability[1] * 100, 2)}% chance of fraud')
+        st.write('---')
+        st.write('### Why is this transaction suspicious?')
+        feature_names = [f'V{i}' for i in range(1, 29)] + ['Amount_scaled', 'Time_scaled']
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(features)
+        importance = pd.Series(shap_values[0, :, 1], index=feature_names)
+        top_features = importance.abs().nlargest(3)
+        st.write('The following unusual patterns were detected:')
+        for i, feature in enumerate(top_features.index, 1):
+            st.write(f'**{i}.** Unusual activity detected in transaction pattern **{feature}**')
+        st.write('---')
+        st.write('⚠️ This transaction has been flagged for review.')
     else:
-        features = np.array(fraud_values if 'Fraud' in option else normal_values).reshape(1, -1)
-        prediction = model.predict(features)
-        probability = model.predict_proba(features)[0]
-
-        if prediction[0] == 1:
-            st.error('🚨 FRAUD Transaction Detected!')
-            st.write(f'**Confidence:** {round(probability[1] * 100, 2)}% chance of fraud')
-            st.write('---')
-            st.write('### Why is this transaction suspicious?')
-            feature_names = [f'V{i}' for i in range(1, 29)] + ['Amount_scaled', 'Time_scaled']
-            explainer = shap.TreeExplainer(model)
-            shap_values = explainer.shap_values(features)
-            importance = pd.Series(shap_values[0, :, 1], index=feature_names)
-            top_features = importance.abs().nlargest(3)
-            st.write('The following unusual patterns were detected:')
-            for i, feature in enumerate(top_features.index, 1):
-                st.write(f'**{i}.** Unusual activity detected in transaction pattern **{feature}**')
-            st.write('---')
-            st.write('⚠️ This transaction has been flagged for review.')
-        else:
-            st.success('✅ Normal Transaction')
-            st.write(f'**Confidence:** {round(probability[0] * 100, 2)}% chance of being normal')
-            st.write('This transaction appears to be safe.')
+        st.success('✅ Normal Transaction')
+        st.write(f'**Confidence:** {round(probability[0] * 100, 2)}% chance of being normal')
+        st.write('This transaction appears to be safe.')
